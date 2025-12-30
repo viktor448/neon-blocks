@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <title>Neon Blocks: Pro Final</title>
+    <title>Neon Blocks: Final Pro</title>
     <style>
         :root {
             --primary-color: #00ffcc;
@@ -32,8 +32,7 @@
         }
 
         .top-bar {
-            width: 92%;
-            display: flex; justify-content: space-between;
+            width: 95%; display: flex; justify-content: space-between;
             align-items: center; padding: 10px 0; z-index: 5;
         }
 
@@ -45,67 +44,49 @@
         .icon-btn {
             background: rgba(255,255,255,0.05); border: 1px solid var(--primary-color);
             color: var(--primary-color); padding: 8px 12px; border-radius: 8px;
-            cursor: pointer; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;
+            cursor: pointer; font-size: 0.7rem; font-weight: bold;
         }
 
         canvas {
-            background: #000;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            max-width: 95vw; max-height: 70vh;
+            background: #000; border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; max-width: 95vw; max-height: 65vh;
             height: auto; box-shadow: 0 0 40px rgba(0,0,0,0.7);
         }
 
-        /* ИСПРАВЛЕННОЕ ЦЕНТРИРОВАНИЕ */
-        #perfect-msg-box {
-            position: absolute;
-            top: 40%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            pointer-events: none;
-            z-index: 500;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        /* ИДЕАЛЬНЫЙ ЦЕНТР */
+        #perfect-ui {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            pointer-events: none; z-index: 1000;
         }
-
         #perfect-score-msg {
-            font-size: 3.5rem; font-weight: 900;
-            color: #fff; text-shadow: 0 0 20px var(--perfect-color), 0 0 60px #fff;
-            opacity: 0; transform: scale(0.2);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            text-transform: uppercase; font-style: italic; text-align: center;
+            font-size: 3.5rem; font-weight: 900; color: #fff;
+            text-shadow: 0 0 20px var(--perfect-color), 0 0 60px #fff;
+            opacity: 0; transform: scale(0.2); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase; font-style: italic;
         }
         #perfect-score-msg.active { opacity: 1; transform: scale(1); }
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.97); display: flex; flex-direction: column;
+            background: rgba(0,0,0,0.98); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100;
-            backdrop-filter: blur(15px); border-radius: 12px;
+            backdrop-filter: blur(20px); border-radius: 12px;
         }
         .hidden { display: none !important; }
 
-        .menu-btn { 
-            padding: 15px 35px; font-size: 1.1rem; background: transparent; 
-            color: white; border: 2px solid var(--primary-color); 
-            border-radius: 50px; text-transform: uppercase; font-weight: 900; 
-            margin: 10px; cursor: pointer; min-width: 200px;
-        }
+        h1 { font-size: 2.8rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; }
+        .menu-btn { padding: 15px 35px; font-size: 1.1rem; background: transparent; color: white; border: 2px solid var(--primary-color); border-radius: 50px; text-transform: uppercase; font-weight: 900; margin: 10px; cursor: pointer; min-width: 200px; }
 
         #leaderboard-box {
             width: 85%; max-height: 40vh; overflow-y: auto;
             margin: 20px 0; border: 1px solid var(--primary-color);
-            padding: 10px; background: rgba(0,0,0,0.4); border-radius: 10px;
-            font-size: 0.9rem;
+            padding: 10px; background: rgba(0,0,0,0.4); border-radius: 10px; font-size: 0.9rem;
         }
         .leader-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; }
-        .current-user { color: var(--primary-color); font-weight: bold; background: rgba(0,255,204,0.1); }
+        .current-user { color: var(--primary-color); font-weight: bold; }
 
-        #track-display {
-            position: absolute; top: 65px; font-size: 0.8rem; color: var(--primary-color);
-            font-weight: bold; opacity: 0; transition: opacity 0.5s; z-index: 20;
-        }
+        #track-display { position: absolute; top: 65px; font-size: 0.8rem; color: var(--primary-color); font-weight: bold; opacity: 0; transition: 0.5s; z-index: 20; }
         #beat-fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 0px solid var(--primary-color); box-sizing: border-box; transition: 0.1s; z-index: 10; border-radius: 12px; }
     </style>
 </head>
@@ -115,8 +96,8 @@
         <div id="beat-fx"></div>
         <div id="track-display">TRACK 1/10</div>
         
-        <div id="perfect-msg-box">
-            <div id="perfect-score-msg">PERFECT SCORE!</div>
+        <div id="perfect-ui">
+            <div id="perfect-score-msg">PERFECT!</div>
         </div>
         
         <div class="top-bar">
@@ -125,7 +106,7 @@
                 <div class="record-container">BEST: <span id="high-score">0</span></div>
             </div>
             <div class="controls">
-                <button class="icon-btn" onclick="nextTrack()">♪ NEXT</button>
+                <button class="icon-btn" onclick="nextTrack()">♪</button>
                 <button class="icon-btn" onclick="restartGame()">RESET</button>
                 <button class="icon-btn" onclick="showMenu()">MENU</button>
             </div>
@@ -133,29 +114,24 @@
 
         <canvas id="gameCanvas"></canvas>
 
-        <!-- ЛОГИН -->
         <div id="login-menu" class="overlay hidden">
             <h1>YOUR NAME</h1>
             <input type="text" id="name-input" placeholder="PLAYER" maxlength="10" style="background:transparent; border:2px solid var(--primary-color); color:white; padding:12px; font-size:1.4rem; text-align:center; border-radius:10px; width:80%; margin-bottom:20px; outline:none;">
-            <button class="menu-btn" onclick="saveName()">CONFIRM</button>
+            <button class="menu-btn" onclick="saveName()">START</button>
         </div>
 
-        <!-- МЕНЮ -->
         <div id="main-menu" class="overlay">
             <h1>NEON BLOCKS</h1>
-            <p id="welcome-msg" style="color: #666; margin-bottom: 20px;"></p>
             <button class="menu-btn" onclick="startGame()">START</button>
             <button class="menu-btn" onclick="showLeaderboard()">GLOBAL TOP</button>
         </div>
 
-        <!-- РЕЙТИНГ -->
         <div id="leaderboard-menu" class="overlay hidden">
             <h1>GLOBAL TOP</h1>
             <div id="leaderboard-box">CONNECTING...</div>
             <button class="menu-btn" onclick="showMenu()">BACK</button>
         </div>
 
-        <!-- КОНЕЦ -->
         <div id="game-over" class="overlay hidden">
             <h1 style="color: var(--secondary-color);">OVER!</h1>
             <p id="final-score-text" style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">0</p>
@@ -168,9 +144,7 @@
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
     const highScoreEl = document.getElementById('high-score');
-    const trackDisplay = document.getElementById('track-display');
 
-    // DREAMLO KEYS (ОБНОВЛЕННЫЕ)
     const PUB_KEY = "677309068f40930da01d2ec7";
     const PRIV_KEY = "G4_S8_pT20mI0vW6v-E3XAsFq-mJofREuV-nOfT3l1lQ";
 
@@ -178,25 +152,29 @@
     canvas.width = BOARD_SIZE; canvas.height = BOARD_SIZE + HAND_HEIGHT;
 
     let username = localStorage.getItem('neonBlocks_user');
-    let highScore = localStorage.getItem('neonBlocks_best') || 0;
+    let highScore = parseInt(localStorage.getItem('neonBlocks_best')) || 0;
     highScoreEl.innerText = highScore;
 
+    // --- МУЗЫКА ---
     const playlist = Array.from({length: 10}, (_, i) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${i+1}.mp3`);
     let currentTrack = 0;
     const bgMusic = new Audio();
     bgMusic.volume = 0.25;
 
     function playTrack(idx) {
-        currentTrack = idx % playlist.length;
-        bgMusic.src = playlist[currentTrack];
-        bgMusic.play().catch(() => {});
-        trackDisplay.innerText = `TRACK ${currentTrack + 1}/10`;
-        trackDisplay.style.opacity = 1;
-        setTimeout(() => trackDisplay.style.opacity = 0, 2500);
+        try {
+            currentTrack = idx % playlist.length;
+            bgMusic.src = playlist[currentTrack];
+            bgMusic.play().catch(() => console.log("Music blocked by browser"));
+            document.getElementById('track-display').innerText = `TRACK ${currentTrack + 1}/10`;
+            document.getElementById('track-display').style.opacity = 1;
+            setTimeout(() => document.getElementById('track-display').style.opacity = 0, 2000);
+        } catch(e) {}
     }
     bgMusic.onended = () => playTrack(currentTrack + 1);
     function nextTrack() { playTrack(currentTrack + 1); }
 
+    // --- ЗВУКИ ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSfx(freq, type, duration, vol = 0.1) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -213,53 +191,42 @@
         const msg = document.getElementById('perfect-score-msg');
         msg.classList.add('active');
         setTimeout(() => msg.classList.remove('active'), 2500);
-        playSfx(40, 'sawtooth', 2.0, 0.5);
-        playSfx(44, 'sawtooth', 2.0, 0.3);
-        playSfx(100, 'sine', 1.5, 0.4);
+        playSfx(40, 'sawtooth', 1.5, 0.5);
+        playSfx(100, 'sine', 1.5, 0.3);
     }
 
-    // --- ИСПРАВЛЕННЫЙ ЛИДЕРБОРД С ТАЙМАУТОМ ---
+    // --- ЛИДЕРБОРД ---
+    function saveName() {
+        const val = document.getElementById('name-input').value.trim();
+        if (val.length >= 2) {
+            username = val;
+            localStorage.setItem('neonBlocks_user', username);
+            document.getElementById('login-menu').classList.add('hidden');
+            startGame();
+        }
+    }
+
     function showLeaderboard() {
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('leaderboard-menu').classList.remove('hidden');
         const box = document.getElementById('leaderboard-box');
-        box.innerHTML = "CONNECTING...";
+        box.innerHTML = "LOADING...";
 
-        const cbName = 'lb_callback_' + Math.floor(Math.random() * 100000);
-        let hasResponded = false;
-
+        const cbName = 'callback_' + Math.floor(Math.random() * 100000);
+        const script = document.createElement('script');
         window[cbName] = function(data) {
-            hasResponded = true;
-            if (!data || !data.dreamlo || !data.dreamlo.leaderboard) {
-                box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
+            if (!data || !data.dreamlo || !data.dreamlo.leaderboard || !data.dreamlo.leaderboard.entry) {
+                box.innerHTML = "BE THE FIRST!";
             } else {
                 let items = data.dreamlo.leaderboard.entry;
-                if (!items) {
-                    box.innerHTML = "<div style='text-align:center'>EMPTY TABLE</div>";
-                } else {
-                    if (!Array.isArray(items)) items = [items];
-                    box.innerHTML = items.map((e, i) => `
-                        <div class="leader-item ${e.name === username ? 'current-user' : ''}">
-                            <span>${i+1}. ${e.name}</span>
-                            <span>${e.score}</span>
-                        </div>`).join('');
-                }
+                if (!Array.isArray(items)) items = [items];
+                box.innerHTML = items.map((e, i) => `<div class="leader-item ${e.name === username ? 'current-user' : ''}"><span>${i+1}. ${e.name}</span><span>${e.score}</span></div>`).join('');
             }
             delete window[cbName];
+            script.remove();
         };
-
-        const script = document.createElement('script');
         script.src = `https://www.dreamlo.com/lb/${PUB_KEY}/jsonp/${cbName}`;
         document.body.appendChild(script);
-
-        // Таймер для отмены загрузки (если сервер молчит)
-        setTimeout(() => {
-            if (!hasResponded) {
-                box.innerHTML = "<div style='text-align:center'>SERVER BUSY. TRY LATER.</div>";
-                delete window[cbName];
-                script.remove();
-            }
-        }, 5000);
     }
 
     function submitScore(s) {
@@ -268,16 +235,7 @@
         img.src = `https://www.dreamlo.com/lb/${PRIV_KEY}/add/${encodeURIComponent(username)}/${s}`;
     }
 
-    function saveName() {
-        const val = document.getElementById('name-input').value.trim();
-        if (val.length >= 2) {
-            username = val; localStorage.setItem('neonBlocks_user', username);
-            document.getElementById('login-menu').classList.add('hidden');
-            startGame();
-        }
-    }
-
-    // --- ЛОГИКА ИГРЫ ---
+    // --- ИГРА ---
     const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff'];
     const SHAPES = [[[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]];
     let grid = [], hand = [], draggingPiece = null, mousePos = {x:0, y:0}, score = 0, isGameRunning = false, particles = [];
@@ -290,11 +248,8 @@
     function refillHand() {
         if (hand.length === 0) {
             for (let i = 0; i < 3; i++) {
-                hand.push({
-                    shape: SHAPES[Math.floor(Math.random()*SHAPES.length)],
-                    color: COLORS[Math.floor(Math.random()*COLORS.length)],
-                    x: (BOARD_SIZE/3)*i + (BOARD_SIZE/6), y: BOARD_SIZE + (HAND_HEIGHT/2) + 5, scale: 0.5
-                });
+                hand.push({ shape: SHAPES[Math.floor(Math.random()*SHAPES.length)], color: COLORS[Math.floor(Math.random()*COLORS.length)], 
+                x: (BOARD_SIZE/3)*i + (BOARD_SIZE/6), y: BOARD_SIZE + (HAND_HEIGHT/2) + 5, scale: 0.5 });
             }
         }
     }
@@ -341,16 +296,14 @@
 
     function canPlace(sh, row, col) {
         if (row < 0 || col < 0 || row + sh.length > GRID_SIZE || col + sh[0].length > GRID_SIZE) return false;
-        for (let r = 0; r < sh.length; r++) {
-            for (let c = 0; c < sh[r].length; c++) if (sh[r][c] && grid[row + r][col + c]) return false;
-        }
+        for (let r = 0; r < sh.length; r++) for (let c = 0; c < sh[r].length; c++) if (sh[r][c] && grid[row+r][col+c]) return false;
         return true;
     }
 
     function checkLines() {
         let rs = [], cs = [];
         for (let r = 0; r < GRID_SIZE; r++) if (grid[r].every(v => v !== null)) rs.push(r);
-        for (let c = 0; c < GRID_SIZE; c++) { let f=true; for (let r = 0; r < GRID_SIZE; r++) if(!grid[r][c]) f=false; if(f) cs.push(c); }
+        for (let c = 0; c < GRID_SIZE; c++) { let f=true; for (let r=0; r<GRID_SIZE; r++) if(!grid[r][c]) f=false; if(f) cs.push(c); }
         if (rs.length || cs.length) {
             playSfx(600, 'triangle', 0.4, 0.2);
             rs.forEach(r => { grid[r].fill(null); for(let c=0; c<GRID_SIZE; c++) createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); });
@@ -388,7 +341,7 @@
                 draggingPiece.shape.forEach((row, r) => row.forEach((v, c) => { if (v) grid[gy+r][gx+c] = draggingPiece.color; }));
                 hand = hand.filter(p => p !== draggingPiece); checkLines(); refillHand();
                 if (!hand.some(p => { for(let r=0; r<=GRID_SIZE-p.shape.length; r++) for(let c=0; c<=GRID_SIZE-p.shape[0].length; c++) if(canPlace(p.shape,r,c)) return true; return false; })) {
-                    isGameRunning = false; document.getElementById('final-score-text').innerText = "SCORE: " + score; document.getElementById('game-over').classList.remove('hidden');
+                    isGameRunning = false; document.getElementById('final-score-text').innerText = score; document.getElementById('game-over').classList.remove('hidden');
                 }
             }
             draggingPiece = null;
@@ -396,7 +349,10 @@
     });
 
     function startGame() {
-        if (!username) return document.getElementById('login-menu').classList.remove('hidden');
+        if (!username) {
+            document.getElementById('login-menu').classList.remove('hidden');
+            return;
+        }
         if (audioCtx.state === 'suspended') audioCtx.resume();
         playTrack(currentTrack);
         document.getElementById('main-menu').classList.add('hidden');

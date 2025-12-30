@@ -56,7 +56,6 @@
             height: auto; box-shadow: 0 0 40px rgba(0,0,0,0.7);
         }
 
-        /* ИДЕАЛЬНОЕ ЦЕНТРИРОВАНИЕ УВЕДОМЛЕНИЯ */
         .perfect-overlay {
             position: absolute;
             top: 40%; left: 50%;
@@ -173,7 +172,6 @@
     const highScoreEl = document.getElementById('high-score');
     const trackDisplay = document.getElementById('track-display');
 
-    // DREAMLO KEYS
     const PUB_KEY = "677309068f40930da01d2ec7";
     const PRIV_KEY = "G4_S8_pT20mI0vW6v-E3XAsFq-mJofREuV-nOfT3l1lQ";
 
@@ -184,7 +182,6 @@
     let highScore = localStorage.getItem('neonBlocks_best') || 0;
     highScoreEl.innerText = highScore;
 
-    // --- ПЛЕЙЛИСТ ---
     const playlist = Array.from({length: 10}, (_, i) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${i+1}.mp3`);
     let currentTrack = 0;
     const bgMusic = new Audio();
@@ -201,9 +198,7 @@
     bgMusic.onended = () => playTrack(currentTrack + 1);
     function nextTrack() { playTrack(currentTrack + 1); }
 
-    // --- ЗВУКОВОЙ ДВИЖОК ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
     function playSfx(freq, type, duration, vol = 0.1) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
@@ -219,17 +214,12 @@
         const msg = document.getElementById('perfect-score-msg');
         msg.classList.add('active');
         setTimeout(() => msg.classList.remove('active'), 2500);
-        
-        // МОЩНЫЙ BRAAM ЭФФЕКТ (ВМЕСТО ГОЛОСА)
-        playSfx(40, 'sawtooth', 2.0, 0.5); // Глубокий рык
-        playSfx(44, 'sawtooth', 2.0, 0.3); // Резонанс
-        playSfx(100, 'sine', 1.5, 0.4);    // Удар
-        
-        // Эхо-эффект
+        playSfx(40, 'sawtooth', 2.0, 0.5);
+        playSfx(44, 'sawtooth', 2.0, 0.3);
+        playSfx(100, 'sine', 1.5, 0.4);
         setTimeout(() => playSfx(30, 'sawtooth', 1.0, 0.2), 400);
     }
 
-    // --- ГЛОБАЛЬНЫЙ РЕЙТИНГ (JSONP - САМЫЙ СТАБИЛЬНЫЙ) ---
     function saveName() {
         const val = document.getElementById('name-input').value.trim();
         if (val.length >= 2) {
@@ -240,44 +230,55 @@
         }
     }
 
+    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ГЛОБАЛЬНОГО РЕЙТИНГА ---
     function showLeaderboard() {
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('leaderboard-menu').classList.remove('hidden');
         const box = document.getElementById('leaderboard-box');
         box.innerHTML = "LOADING...";
 
-        const cbName = 'jsonp_cb_' + Math.round(Math.random()*100000);
-        const script = document.createElement('script');
+        // Удаляем старый скрипт, если он был
+        const oldScript = document.getElementById('lb_script');
+        if (oldScript) oldScript.remove();
+
+        const cbName = 'jsonp_callback_' + Math.floor(Math.random() * 100000);
         
         window[cbName] = function(data) {
-            if (!data.dreamlo || !data.dreamlo.leaderboard || !data.dreamlo.leaderboard.entry) {
-                box.innerHTML = "<div style='text-align:center'>EMPTY! BE THE FIRST!</div>";
+            if (!data || !data.dreamlo || !data.dreamlo.leaderboard) {
+                box.innerHTML = "<div style='text-align:center'>SERVER ERROR</div>";
             } else {
                 let items = data.dreamlo.leaderboard.entry;
-                if (!Array.isArray(items)) items = [items];
-                box.innerHTML = items.map((e, i) => `
-                    <div class="leader-item ${e.name === username ? 'current-user' : ''}">
-                        <span>${i+1}. ${e.name}</span>
-                        <span>${e.score}</span>
-                    </div>
-                `).join('');
+                if (!items) {
+                    box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
+                } else {
+                    // Если результат один - он приходит объектом, если много - массивом
+                    if (!Array.isArray(items)) items = [items];
+                    
+                    box.innerHTML = items.map((e, i) => `
+                        <div class="leader-item ${e.name === username ? 'current-user' : ''}">
+                            <span>${i+1}. ${e.name}</span>
+                            <span>${e.score}</span>
+                        </div>
+                    `).join('');
+                }
             }
             delete window[cbName];
-            script.remove();
         };
 
+        const script = document.createElement('script');
+        script.id = 'lb_script';
         script.src = `https://www.dreamlo.com/lb/${PUB_KEY}/jsonp/${cbName}`;
-        script.onerror = () => { box.innerHTML = "CONNECTION ERROR (CORS/OFFLINE)"; };
+        script.onerror = () => { box.innerHTML = "CONNECTION ERROR"; };
         document.body.appendChild(script);
     }
 
     function submitScore(s) {
         if (!username) return;
+        // Самый надежный способ отправки - скрытое изображение
         const img = new Image();
         img.src = `https://www.dreamlo.com/lb/${PRIV_KEY}/add/${encodeURIComponent(username)}/${s}`;
     }
 
-    // --- ИГРОВАЯ ЛОГИКА ---
     const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff'];
     const SHAPES = [[[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]];
     let grid = [], hand = [], draggingPiece = null, mousePos = {x:0, y:0}, score = 0, isGameRunning = false, particles = [];
@@ -317,22 +318,16 @@
     function render() {
         if (!isGameRunning) return;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Зона руки
         ctx.fillStyle = '#080808'; ctx.fillRect(0, BOARD_SIZE, BOARD_SIZE, HAND_HEIGHT);
         ctx.strokeStyle = 'rgba(0,255,204,0.3)'; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(0, BOARD_SIZE); ctx.lineTo(BOARD_SIZE, BOARD_SIZE); ctx.stroke();
-
-        // Сетка
         ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
         for (let i = 0; i <= GRID_SIZE; i++) {
             ctx.beginPath(); ctx.moveTo(i*CELL_SIZE, 0); ctx.lineTo(i*CELL_SIZE, BOARD_SIZE); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0, i*CELL_SIZE); ctx.lineTo(BOARD_SIZE, i*CELL_SIZE); ctx.stroke();
         }
-
         for (let r=0; r<GRID_SIZE; r++) for (let c=0; c<GRID_SIZE; c++) if (grid[r][c]) drawBlock(c*CELL_SIZE, r*CELL_SIZE, grid[r][c]);
         hand.forEach(p => { if (p !== draggingPiece) drawPiece(p, p.x, p.y, p.scale); });
-
         if (draggingPiece) {
             const tw = draggingPiece.shape[0].length * CELL_SIZE, th = draggingPiece.shape.length * CELL_SIZE;
             const gx = Math.round((mousePos.x - tw/2) / CELL_SIZE), gy = Math.round((mousePos.y - th/2) / CELL_SIZE);

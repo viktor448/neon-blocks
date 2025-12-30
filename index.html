@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <title>Neon Blocks: Pro</title>
+    <title>Neon Blocks: Pro Final</title>
     <style>
         :root {
             --primary-color: #00ffcc;
@@ -56,13 +56,14 @@
             height: auto; box-shadow: 0 0 40px rgba(0,0,0,0.7);
         }
 
-        .perfect-overlay {
+        /* ИСПРАВЛЕННОЕ ЦЕНТРИРОВАНИЕ */
+        #perfect-msg-box {
             position: absolute;
             top: 40%; left: 50%;
             transform: translate(-50%, -50%);
             width: 100%;
             pointer-events: none;
-            z-index: 200;
+            z-index: 500;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -85,8 +86,6 @@
         }
         .hidden { display: none !important; }
 
-        h1 { font-size: 2.5rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; }
-
         .menu-btn { 
             padding: 15px 35px; font-size: 1.1rem; background: transparent; 
             color: white; border: 2px solid var(--primary-color); 
@@ -94,18 +93,13 @@
             margin: 10px; cursor: pointer; min-width: 200px;
         }
 
-        #name-input { 
-            background: transparent; border: 2px solid var(--primary-color); 
-            color: white; padding: 12px; font-size: 1.4rem; text-align: center; 
-            border-radius: 10px; width: 80%; margin-bottom: 20px; outline: none;
-        }
-
         #leaderboard-box {
             width: 85%; max-height: 40vh; overflow-y: auto;
             margin: 20px 0; border: 1px solid var(--primary-color);
             padding: 10px; background: rgba(0,0,0,0.4); border-radius: 10px;
+            font-size: 0.9rem;
         }
-        .leader-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; font-size: 0.9rem; }
+        .leader-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; }
         .current-user { color: var(--primary-color); font-weight: bold; background: rgba(0,255,204,0.1); }
 
         #track-display {
@@ -121,7 +115,7 @@
         <div id="beat-fx"></div>
         <div id="track-display">TRACK 1/10</div>
         
-        <div class="perfect-overlay">
+        <div id="perfect-msg-box">
             <div id="perfect-score-msg">PERFECT SCORE!</div>
         </div>
         
@@ -139,12 +133,14 @@
 
         <canvas id="gameCanvas"></canvas>
 
+        <!-- ЛОГИН -->
         <div id="login-menu" class="overlay hidden">
             <h1>YOUR NAME</h1>
-            <input type="text" id="name-input" placeholder="PLAYER" maxlength="10">
-            <button class="menu-btn" onclick="saveName()">START</button>
+            <input type="text" id="name-input" placeholder="PLAYER" maxlength="10" style="background:transparent; border:2px solid var(--primary-color); color:white; padding:12px; font-size:1.4rem; text-align:center; border-radius:10px; width:80%; margin-bottom:20px; outline:none;">
+            <button class="menu-btn" onclick="saveName()">CONFIRM</button>
         </div>
 
+        <!-- МЕНЮ -->
         <div id="main-menu" class="overlay">
             <h1>NEON BLOCKS</h1>
             <p id="welcome-msg" style="color: #666; margin-bottom: 20px;"></p>
@@ -152,12 +148,14 @@
             <button class="menu-btn" onclick="showLeaderboard()">GLOBAL TOP</button>
         </div>
 
+        <!-- РЕЙТИНГ -->
         <div id="leaderboard-menu" class="overlay hidden">
             <h1>GLOBAL TOP</h1>
             <div id="leaderboard-box">CONNECTING...</div>
             <button class="menu-btn" onclick="showMenu()">BACK</button>
         </div>
 
+        <!-- КОНЕЦ -->
         <div id="game-over" class="overlay hidden">
             <h1 style="color: var(--secondary-color);">OVER!</h1>
             <p id="final-score-text" style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">0</p>
@@ -172,6 +170,7 @@
     const highScoreEl = document.getElementById('high-score');
     const trackDisplay = document.getElementById('track-display');
 
+    // DREAMLO KEYS (ОБНОВЛЕННЫЕ)
     const PUB_KEY = "677309068f40930da01d2ec7";
     const PRIV_KEY = "G4_S8_pT20mI0vW6v-E3XAsFq-mJofREuV-nOfT3l1lQ";
 
@@ -217,68 +216,68 @@
         playSfx(40, 'sawtooth', 2.0, 0.5);
         playSfx(44, 'sawtooth', 2.0, 0.3);
         playSfx(100, 'sine', 1.5, 0.4);
-        setTimeout(() => playSfx(30, 'sawtooth', 1.0, 0.2), 400);
     }
 
-    function saveName() {
-        const val = document.getElementById('name-input').value.trim();
-        if (val.length >= 2) {
-            username = val;
-            localStorage.setItem('neonBlocks_user', username);
-            document.getElementById('login-menu').classList.add('hidden');
-            startGame();
-        }
-    }
-
-    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ГЛОБАЛЬНОГО РЕЙТИНГА ---
+    // --- ИСПРАВЛЕННЫЙ ЛИДЕРБОРД С ТАЙМАУТОМ ---
     function showLeaderboard() {
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('leaderboard-menu').classList.remove('hidden');
         const box = document.getElementById('leaderboard-box');
-        box.innerHTML = "LOADING...";
+        box.innerHTML = "CONNECTING...";
 
-        // Удаляем старый скрипт, если он был
-        const oldScript = document.getElementById('lb_script');
-        if (oldScript) oldScript.remove();
+        const cbName = 'lb_callback_' + Math.floor(Math.random() * 100000);
+        let hasResponded = false;
 
-        const cbName = 'jsonp_callback_' + Math.floor(Math.random() * 100000);
-        
         window[cbName] = function(data) {
+            hasResponded = true;
             if (!data || !data.dreamlo || !data.dreamlo.leaderboard) {
-                box.innerHTML = "<div style='text-align:center'>SERVER ERROR</div>";
+                box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
             } else {
                 let items = data.dreamlo.leaderboard.entry;
                 if (!items) {
-                    box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
+                    box.innerHTML = "<div style='text-align:center'>EMPTY TABLE</div>";
                 } else {
-                    // Если результат один - он приходит объектом, если много - массивом
                     if (!Array.isArray(items)) items = [items];
-                    
                     box.innerHTML = items.map((e, i) => `
                         <div class="leader-item ${e.name === username ? 'current-user' : ''}">
                             <span>${i+1}. ${e.name}</span>
                             <span>${e.score}</span>
-                        </div>
-                    `).join('');
+                        </div>`).join('');
                 }
             }
             delete window[cbName];
         };
 
         const script = document.createElement('script');
-        script.id = 'lb_script';
         script.src = `https://www.dreamlo.com/lb/${PUB_KEY}/jsonp/${cbName}`;
-        script.onerror = () => { box.innerHTML = "CONNECTION ERROR"; };
         document.body.appendChild(script);
+
+        // Таймер для отмены загрузки (если сервер молчит)
+        setTimeout(() => {
+            if (!hasResponded) {
+                box.innerHTML = "<div style='text-align:center'>SERVER BUSY. TRY LATER.</div>";
+                delete window[cbName];
+                script.remove();
+            }
+        }, 5000);
     }
 
     function submitScore(s) {
         if (!username) return;
-        // Самый надежный способ отправки - скрытое изображение
         const img = new Image();
         img.src = `https://www.dreamlo.com/lb/${PRIV_KEY}/add/${encodeURIComponent(username)}/${s}`;
     }
 
+    function saveName() {
+        const val = document.getElementById('name-input').value.trim();
+        if (val.length >= 2) {
+            username = val; localStorage.setItem('neonBlocks_user', username);
+            document.getElementById('login-menu').classList.add('hidden');
+            startGame();
+        }
+    }
+
+    // --- ЛОГИКА ИГРЫ ---
     const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff'];
     const SHAPES = [[[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]];
     let grid = [], hand = [], draggingPiece = null, mousePos = {x:0, y:0}, score = 0, isGameRunning = false, particles = [];
@@ -417,6 +416,7 @@
 
     function restartGame() { startGame(); }
     window.onload = () => { if (!username) document.getElementById('welcome-msg').innerText = "WELCOME!"; else showMenu(); };
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>

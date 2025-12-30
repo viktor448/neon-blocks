@@ -5,157 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <title>Neon Block Puzzle</title>
+    <title>Neon Blocks: Global Ultimate</title>
     <style>
         :root {
             --primary-color: #00ffcc;
             --secondary-color: #ff0066;
+            --perfect-color: #ffcc00;
             --bg-color: #050505;
-            --panel-bg: rgba(255, 255, 255, 0.05);
         }
 
         body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: var(--bg-color);
-            color: white;
-            font-family: 'Segoe UI', sans-serif;
-            overflow: hidden;
-            user-select: none;
-            touch-action: none;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            height: 100vh; background-color: var(--bg-color);
+            color: white; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; user-select: none; touch-action: none;
         }
 
         #game-container {
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; width: 100%;
         }
 
-        /* Верхняя панель управления */
         .top-bar {
-            width: 95vw;
-            max-width: 420px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            z-index: 5;
+            width: 95vw; max-width: 420px;
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 10px 0; z-index: 5;
         }
 
-        .score-container {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
-        }
+        .stats-group { display: flex; flex-direction: column; gap: 2px; }
+        .score-container { font-size: 1.2rem; font-weight: bold; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
+        .record-container { font-size: 0.8rem; font-weight: bold; color: var(--perfect-color); text-transform: uppercase; }
 
-        .controls {
-            display: flex;
-            gap: 10px;
-        }
-
+        .controls { display: flex; gap: 8px; }
         .icon-btn {
-            background: var(--panel-bg);
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 8px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: bold;
-            transition: 0.2s;
-            text-transform: uppercase;
-        }
-
-        .icon-btn:active {
-            background: var(--primary-color);
-            color: black;
-            transform: scale(0.9);
+            background: rgba(255,255,255,0.05); border: 1px solid var(--primary-color);
+            color: var(--primary-color); padding: 8px 12px; border-radius: 8px;
+            cursor: pointer; font-size: 0.8rem; font-weight: bold;
         }
 
         canvas {
             background: #000;
             border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            max-width: 95vw;
-            max-height: 75vh;
-            height: auto;
-            touch-action: none;
-            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            max-width: 95vw; max-height: 70vh;
+            height: auto; box-shadow: 0 0 40px rgba(0,0,0,0.7);
         }
 
         .overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(15px);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.96); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(20px);
         }
-
         .hidden { display: none !important; }
 
-        h1 {
-            font-size: 3rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 20px var(--primary-color);
-            margin-bottom: 30px;
-            font-style: italic;
+        h1 { font-size: 2.8rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; text-transform: uppercase; font-style: italic; }
+
+        .menu-btn { 
+            padding: 15px 40px; font-size: 1.2rem; background: transparent; 
+            color: white; border: 2px solid var(--primary-color); 
+            border-radius: 50px; text-transform: uppercase; font-weight: 900; 
+            margin: 10px; cursor: pointer; min-width: 200px;
         }
 
-        .menu-btn {
-            padding: 15px 50px;
-            font-size: 1.4rem;
-            background: transparent;
-            color: white;
-            border: 3px solid var(--primary-color);
-            border-radius: 50px;
-            text-transform: uppercase;
-            font-weight: 900;
-            cursor: pointer;
+        #name-input { 
+            background: transparent; border: 2px solid var(--primary-color); 
+            color: white; padding: 12px; font-size: 1.4rem; text-align: center; 
+            border-radius: 10px; width: 80%; margin-bottom: 20px; 
         }
 
-        #beat-fx {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            border: 0px solid var(--primary-color);
-            box-sizing: border-box;
-            transition: 0.1s;
+        #leaderboard-box {
+            width: 85%; max-height: 40vh; overflow-y: auto;
+            margin: 20px 0; border: 1px solid var(--primary-color);
+            padding: 10px; background: rgba(0,0,0,0.4); border-radius: 10px;
         }
+        .leader-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; font-size: 0.9rem; }
+        .current-user { color: var(--primary-color); font-weight: bold; }
+
+        #perfect-score-msg {
+            position: absolute; top: 35%; font-size: 3rem; font-weight: 900; 
+            color: #fff; text-shadow: 0 0 20px var(--perfect-color), 0 0 50px #fff;
+            opacity: 0; transform: scale(0.3) rotate(-10deg); transition: 0.4s; z-index: 200; pointer-events: none;
+        }
+        #perfect-score-msg.active { opacity: 1; transform: scale(1.2) rotate(0deg); animation: flash 0.5s infinite; }
+
+        @keyframes flash { 0% { filter: brightness(1); } 50% { filter: brightness(1.5); } 100% { filter: brightness(1); } }
+        
+        #track-display {
+            position: absolute; top: 65px; font-size: 0.8rem; color: var(--primary-color);
+            font-weight: bold; opacity: 0; transition: opacity 0.5s; z-index: 20;
+        }
+        #beat-fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 0px solid var(--primary-color); box-sizing: border-box; transition: 0.1s; z-index: 10; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
         <div id="beat-fx"></div>
+        <div id="track-display">TRACK 1/10</div>
+        <div id="perfect-score-msg">PERFECT SCORE!</div>
         
         <div class="top-bar">
-            <div class="score-container">SCORE: <span id="score">0</span></div>
+            <div class="stats-group">
+                <div class="score-container">SCORE: <span id="score">0</span></div>
+                <div class="record-container">BEST: <span id="high-score">0</span></div>
+            </div>
             <div class="controls">
-                <button class="icon-btn" onclick="restartGame()">Reset</button>
-                <button class="icon-btn" onclick="showMenu()">Menu</button>
+                <button class="icon-btn" onclick="nextTrack()">♪</button>
+                <button class="icon-btn" onclick="restartGame()">RESET</button>
+                <button class="icon-btn" onclick="showMenu()">MENU</button>
             </div>
         </div>
 
         <canvas id="gameCanvas"></canvas>
 
+        <div id="login-menu" class="overlay hidden">
+            <h1>WHO ARE YOU?</h1>
+            <input type="text" id="name-input" placeholder="USERNAME" maxlength="12">
+            <button class="menu-btn" onclick="saveName()">CONFIRM</button>
+        </div>
+
         <div id="main-menu" class="overlay">
             <h1>NEON BLOCKS</h1>
+            <p id="welcome-msg" style="color: #666; margin-bottom: 20px;"></p>
             <button class="menu-btn" onclick="startGame()">START</button>
+            <button class="menu-btn" onclick="showLeaderboard()">GLOBAL TOP</button>
+        </div>
+
+        <div id="leaderboard-menu" class="overlay hidden">
+            <h1>GLOBAL TOP</h1>
+            <div id="leaderboard-box">LOADING...</div>
+            <button class="menu-btn" onclick="showMenu()">BACK</button>
         </div>
 
         <div id="game-over" class="overlay hidden">
-            <h1 style="color: var(--secondary-color);">OVER!</h1>
-            <p id="final-score" style="font-size: 1.5rem; margin-bottom: 20px;">SCORE: 0</p>
+            <h1 style="color: var(--secondary-color);">FINISH!</h1>
+            <p id="final-score-text" style="font-size: 1.5rem; color: #fff; margin-bottom: 5px;">0</p>
             <button class="menu-btn" onclick="restartGame()">RETRY</button>
         </div>
     </div>
@@ -164,50 +151,131 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const scoreEl = document.getElementById('score');
-    
-    const GRID_SIZE = 10;
-    const CELL_SIZE = 42;
-    const BOARD_SIZE = GRID_SIZE * CELL_SIZE;
-    const HAND_HEIGHT = 160;
+    const highScoreEl = document.getElementById('high-score');
+    const trackDisplay = document.getElementById('track-display');
 
+    // КЛЮЧИ DREAMLO
+    const DREAMLO_PUBLIC_KEY = "677309068f40930da01d2ec7";
+    const DREAMLO_PRIVATE_KEY = "G4_S8_pT20mI0vW6v-E3XAsFq-mJofREuV-nOfT3l1lQ";
+
+    const GRID_SIZE = 10, CELL_SIZE = 42, BOARD_SIZE = 420, HAND_HEIGHT = 160;
     canvas.width = BOARD_SIZE;
     canvas.height = BOARD_SIZE + HAND_HEIGHT;
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3');
-    bgMusic.loop = true;
+    let username = localStorage.getItem('neonBlocks_user');
+    let highScore = localStorage.getItem('neonBlocks_best') || 0;
+    highScoreEl.innerText = highScore;
 
-    function playSound(freq, type, duration, vol = 0.1) {
+    // --- МУЗЫКА ---
+    const playlist = Array.from({length: 10}, (_, i) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${i+1}.mp3`);
+    let currentTrack = 0;
+    const bgMusic = new Audio();
+    bgMusic.volume = 0.3;
+
+    function playTrack(idx) {
+        currentTrack = idx % playlist.length;
+        bgMusic.src = playlist[currentTrack];
+        bgMusic.play().catch(() => {});
+        trackDisplay.innerText = `TRACK ${currentTrack + 1}/10`;
+        trackDisplay.style.opacity = 1;
+        setTimeout(() => trackDisplay.style.opacity = 0, 2000);
+    }
+    bgMusic.onended = () => playTrack(currentTrack + 1);
+    function nextTrack() { playTrack(currentTrack + 1); }
+
+    // --- ЗВУКОВОЙ ДВИЖОК ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSfx(freq, type, duration, vol = 0.1) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         osc.connect(gain); gain.connect(audioCtx.destination);
         gain.gain.setValueAtTime(vol, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
     }
 
-    const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff', '#ffffff'];
-    const SHAPES = [
-        [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]],
-        [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]
-    ];
+    function announcePerfect() {
+        const msg = document.getElementById('perfect-score-msg');
+        msg.classList.add('active');
+        setTimeout(() => msg.classList.remove('active'), 2500);
+        
+        // Сейсмический удар
+        playSfx(40, 'sawtooth', 1.5, 0.4);
+        playSfx(80, 'sine', 2.0, 0.5);
 
-    let grid = [];
-    let hand = [];
-    let score = 0;
-    let particles = [];
-    let draggingPiece = null;
-    let mousePos = { x: 0, y: 0 };
-    let isGameRunning = false;
+        if ('speechSynthesis' in window) {
+            const ut = new SpeechSynthesisUtterance("Perfect score!");
+            const voices = window.speechSynthesis.getVoices();
+            // Ищем самый низкий голос (обычно David или Google English)
+            const deepVoice = voices.find(v => v.name.includes("David") || v.name.includes("Male")) || voices[0];
+            ut.voice = deepVoice;
+            ut.pitch = 0.1; // Максимально низкий
+            ut.rate = 0.4;  // Очень медленный
+            ut.volume = 1;
+            window.speechSynthesis.speak(ut);
+        }
+    }
 
-    function initData() {
+    // --- ЛИДЕРБОРД ---
+    function saveName() {
+        const val = document.getElementById('name-input').value.trim();
+        if (val.length >= 2) {
+            username = val;
+            localStorage.setItem('neonBlocks_user', username);
+            document.getElementById('login-menu').classList.add('hidden');
+            startGame();
+        }
+    }
+
+    async function showLeaderboard() {
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('leaderboard-menu').classList.remove('hidden');
+        const box = document.getElementById('leaderboard-box');
+        box.innerHTML = "LOADING...";
+
+        try {
+            // Прямой запрос к Dreamlo
+            const response = await fetch(`https://www.dreamlo.com/lb/${DREAMLO_PUBLIC_KEY}/json`);
+            if (!response.ok) throw new Error('Network error');
+            const data = await response.json();
+            
+            if (!data.dreamlo || !data.dreamlo.leaderboard || !data.dreamlo.leaderboard.entry) {
+                box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
+                return;
+            }
+            
+            let scores = data.dreamlo.leaderboard.entry;
+            if (!Array.isArray(scores)) scores = [scores];
+            
+            box.innerHTML = scores.map((e, i) => `
+                <div class="leader-item ${e.name === username ? 'current-user' : ''}">
+                    <span>${i+1}. ${e.name}</span>
+                    <span>${e.score}</span>
+                </div>
+            `).join('');
+        } catch(e) { 
+            box.innerHTML = "<div style='text-align:center'>SERVER ERROR (CHECK INTERNET)</div>"; 
+        }
+    }
+
+    function submitScore(s) {
+        if (username) {
+            // Используем приватный ключ для отправки
+            fetch(`https://www.dreamlo.com/lb/${DREAMLO_PRIVATE_KEY}/add/${encodeURIComponent(username)}/${s}`);
+        }
+    }
+
+    // --- ЛОГИКА ИГРЫ ---
+    const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff'];
+    const SHAPES = [[[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]];
+    let grid = [], hand = [], draggingPiece = null, mousePos = {x:0, y:0}, score = 0, isGameRunning = false, particles = [];
+
+    function initGame() {
         grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
-        hand = [];
-        score = 0;
-        scoreEl.innerText = score;
+        hand = []; score = 0; scoreEl.innerText = 0;
         refillHand();
     }
 
@@ -215,224 +283,153 @@
         if (hand.length === 0) {
             for (let i = 0; i < 3; i++) {
                 hand.push({
-                    shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
-                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
-                    x: (BOARD_SIZE / 3) * i + (BOARD_SIZE / 6),
-                    y: BOARD_SIZE + (HAND_HEIGHT / 2) + 10,
-                    scale: 0.5
+                    shape: SHAPES[Math.floor(Math.random()*SHAPES.length)],
+                    color: COLORS[Math.floor(Math.random()*COLORS.length)],
+                    x: (BOARD_SIZE/3)*i + (BOARD_SIZE/6), y: BOARD_SIZE + (HAND_HEIGHT/2) + 5, scale: 0.5
                 });
             }
         }
     }
 
     function drawBlock(x, y, color, scale = 1, alpha = 1) {
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        const s = CELL_SIZE * scale;
-        const offset = (CELL_SIZE - s) / 2;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = color;
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.roundRect(x + offset + 1, y + offset + 1, s - 2, s - 2, 5 * scale);
-        ctx.fill();
+        ctx.save(); ctx.globalAlpha = alpha;
+        const s = CELL_SIZE * scale, o = (CELL_SIZE - s) / 2;
+        ctx.shadowBlur = 10; ctx.shadowColor = color; ctx.fillStyle = color;
+        ctx.beginPath(); ctx.roundRect(x+o+1, y+o+1, s-2, s-2, 5*scale); ctx.fill();
         ctx.restore();
     }
 
-    function drawPiece(piece, centerX, centerY, scale, alpha = 1) {
-        const totalW = piece.shape[0].length * CELL_SIZE * scale;
-        const totalH = piece.shape.length * CELL_SIZE * scale;
-        piece.shape.forEach((row, r) => {
-            row.forEach((value, c) => {
-                if (value) {
-                    const x = centerX - totalW / 2 + (c * CELL_SIZE * scale);
-                    const y = centerY - totalH / 2 + (r * CELL_SIZE * scale);
-                    drawBlock(x, y, piece.color, scale, alpha);
-                }
-            });
-        });
+    function drawPiece(p, cx, cy, sc, al = 1) {
+        const tw = p.shape[0].length * CELL_SIZE * sc, th = p.shape.length * CELL_SIZE * sc;
+        p.shape.forEach((row, r) => row.forEach((v, c) => {
+            if (v) drawBlock(cx - tw/2 + (c*CELL_SIZE*sc), cy - th/2 + (r*CELL_SIZE*sc), p.color, sc, al);
+        }));
     }
 
     function render() {
         if (!isGameRunning) return;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Зона полки
+        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, BOARD_SIZE, BOARD_SIZE, HAND_HEIGHT);
+        ctx.strokeStyle = '#00ffcc66'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(0, BOARD_SIZE); ctx.lineTo(BOARD_SIZE, BOARD_SIZE); ctx.stroke();
 
         // Сетка
-        ctx.strokeStyle = '#111';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
         for (let i = 0; i <= GRID_SIZE; i++) {
-            ctx.beginPath(); ctx.moveTo(i * CELL_SIZE, 0); ctx.lineTo(i * CELL_SIZE, BOARD_SIZE); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, i * CELL_SIZE); ctx.lineTo(BOARD_SIZE, i * CELL_SIZE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(i*CELL_SIZE, 0); ctx.lineTo(i*CELL_SIZE, BOARD_SIZE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i*CELL_SIZE); ctx.lineTo(BOARD_SIZE, i*CELL_SIZE); ctx.stroke();
         }
 
-        // Разделитель зон (Неоновая полка)
-        ctx.strokeStyle = 'rgba(0, 255, 204, 0.3)';
-        ctx.lineWidth = 4;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#00ffcc';
-        ctx.beginPath();
-        ctx.moveTo(0, BOARD_SIZE);
-        ctx.lineTo(BOARD_SIZE, BOARD_SIZE);
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-
-        // Поле
-        for (let r = 0; r < GRID_SIZE; r++) {
-            for (let c = 0; c < GRID_SIZE; c++) {
-                if (grid[r][c]) drawBlock(c * CELL_SIZE, r * CELL_SIZE, grid[r][c]);
-            }
-        }
-
-        // Рука
+        for (let r=0; r<GRID_SIZE; r++) for (let c=0; c<GRID_SIZE; c++) if (grid[r][c]) drawBlock(c*CELL_SIZE, r*CELL_SIZE, grid[r][c]);
         hand.forEach(p => { if (p !== draggingPiece) drawPiece(p, p.x, p.y, p.scale); });
 
-        // Тянем
         if (draggingPiece) {
-            const totalW = draggingPiece.shape[0].length * CELL_SIZE;
-            const totalH = draggingPiece.shape.length * CELL_SIZE;
-            const gridX = Math.round((mousePos.x - totalW/2) / CELL_SIZE);
-            const gridY = Math.round((mousePos.y - totalH/2) / CELL_SIZE);
-
-            if (canPlace(draggingPiece.shape, gridY, gridX)) {
-                draggingPiece.shape.forEach((row, r) => {
-                    row.forEach((val, c) => {
-                        if (val) drawBlock((gridX + c) * CELL_SIZE, (gridY + r) * CELL_SIZE, draggingPiece.color, 1, 0.25);
-                    });
-                });
+            const tw = draggingPiece.shape[0].length * CELL_SIZE, th = draggingPiece.shape.length * CELL_SIZE;
+            const gx = Math.round((mousePos.x - tw/2) / CELL_SIZE), gy = Math.round((mousePos.y - th/2) / CELL_SIZE);
+            if (canPlace(draggingPiece.shape, gy, gx)) {
+                draggingPiece.shape.forEach((row, r) => row.forEach((v, c) => { if (v) drawBlock((gx+c)*CELL_SIZE, (gy+r)*CELL_SIZE, draggingPiece.color, 1, 0.25); }));
             }
             drawPiece(draggingPiece, mousePos.x, mousePos.y, 1);
         }
-
         particles.forEach((p, i) => { p.update(); p.draw(); if (p.alpha <= 0) particles.splice(i, 1); });
         requestAnimationFrame(render);
     }
 
-    function canPlace(shape, row, col) {
-        if (row < 0 || col < 0 || row + shape.length > GRID_SIZE || col + shape[0].length > GRID_SIZE) return false;
-        for (let r = 0; r < shape.length; r++) {
-            for (let c = 0; c < shape[r].length; c++) {
-                if (shape[r][c] && grid[row + r][col + c]) return false;
-            }
-        }
+    function canPlace(sh, row, col) {
+        if (row < 0 || col < 0 || row + sh.length > GRID_SIZE || col + sh[0].length > GRID_SIZE) return false;
+        for (let r=0; r<sh.length; r++) for (let c=0; c<sh[r].length; c++) if (sh[r][c] && grid[row+r][col+c]) return false;
         return true;
     }
 
     function checkLines() {
-        let rows = [], cols = [];
-        for (let r = 0; r < GRID_SIZE; r++) if (grid[r].every(cell => cell !== null)) rows.push(r);
-        for (let c = 0; c < GRID_SIZE; c++) {
-            let full = true;
-            for (let r = 0; r < GRID_SIZE; r++) if (!grid[r][c]) full = false;
-            if (full) cols.push(c);
-        }
-        if (rows.length || cols.length) {
-            playSound(700, 'square', 0.3);
-            rows.forEach(r => { for(let c=0; c<GRID_SIZE; c++) { createExplosion(c*CELL_SIZE, r*CELL_SIZE, grid[r][c]); grid[r][c] = null; } });
-            cols.forEach(c => { for(let r=0; r<GRID_SIZE; r++) { if(grid[r][c]) createExplosion(c*CELL_SIZE, r*CELL_SIZE, grid[r][c]); grid[r][c] = null; } });
-            score += (rows.length + cols.length) * 100;
+        let rs = [], cs = [];
+        for (let r=0; r<GRID_SIZE; r++) if (grid[r].every(v => v !== null)) rs.push(r);
+        for (let c=0; c<GRID_SIZE; c++) { let f=true; for (let r=0; r<GRID_SIZE; r++) if(!grid[r][c]) f=false; if(f) cs.push(c); }
+        if (rs.length || cs.length) {
+            playSfx(600, 'triangle', 0.3, 0.2);
+            rs.forEach(r => { grid[r].fill(null); for(let c=0; c<GRID_SIZE; c++) createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); });
+            cs.forEach(c => { for(let r=0; r<GRID_SIZE; r++) { grid[r][c]=null; createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); } });
+            
+            score += (rs.length + cs.length) * 100;
             scoreEl.innerText = score;
+            
+            if (score > highScore) { 
+                highScore = score; highScoreEl.innerText = highScore; 
+                localStorage.setItem('neonBlocks_best', highScore); 
+                submitScore(highScore); 
+            }
+            
+            // Озвучка за каждую 1000 очков
+            if (score > 0 && score % 1000 === 0) announcePerfect();
         }
     }
 
-    canvas.addEventListener('pointerdown', e => {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mx = (e.clientX - rect.left) * scaleX;
-        const my = (e.clientY - rect.top) * scaleY;
+    function createExplosion(x,y,c) { for(let i=0; i<5; i++) particles.push({x:x+20, y:y+20, c:c, a:1, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, update(){this.x+=this.vx;this.y+=this.vy;this.a-=0.05;}, draw(){ctx.globalAlpha=this.a;ctx.fillStyle=this.c;ctx.fillRect(this.x,this.y,4,4);ctx.globalAlpha=1;}}); }
 
+    canvas.addEventListener('pointerdown', e => {
+        const r = canvas.getBoundingClientRect(), mx = (e.clientX-r.left)*(canvas.width/r.width), my = (e.clientY-r.top)*(canvas.height/r.height);
         hand.forEach(p => {
-            const pw = p.shape[0].length * CELL_SIZE * p.scale;
-            const ph = p.shape.length * CELL_SIZE * p.scale;
-            if (mx > p.x - pw/2 - 20 && mx < p.x + pw/2 + 20 && my > p.y - ph/2 - 20 && my < p.y + ph/2 + 20) {
-                draggingPiece = p;
-                canvas.setPointerCapture(e.pointerId);
-                playSound(400, 'sine', 0.1);
-            }
+            const pw = p.shape[0].length*CELL_SIZE*p.scale, ph = p.shape.length*CELL_SIZE*p.scale;
+            if (mx > p.x-pw/2-20 && mx < p.x+pw/2+20 && my > p.y-ph/2-20 && my < p.y+ph/2+20) { draggingPiece = p; canvas.setPointerCapture(e.pointerId); playSfx(400, 'sine', 0.1); }
         });
     });
 
     canvas.addEventListener('pointermove', e => {
         if (!draggingPiece) return;
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        mousePos.x = (e.clientX - rect.left) * scaleX;
-        mousePos.y = (e.clientY - rect.top) * scaleY;
+        const r = canvas.getBoundingClientRect();
+        mousePos.x = (e.clientX-r.left)*(canvas.width/r.width);
+        mousePos.y = (e.clientY-r.top)*(canvas.height/r.height);
     });
 
     canvas.addEventListener('pointerup', e => {
         if (draggingPiece) {
-            const totalW = draggingPiece.shape[0].length * CELL_SIZE;
-            const totalH = draggingPiece.shape.length * CELL_SIZE;
-            const gridX = Math.round((mousePos.x - totalW/2) / CELL_SIZE);
-            const gridY = Math.round((mousePos.y - totalH/2) / CELL_SIZE);
-
-            if (canPlace(draggingPiece.shape, gridY, gridX)) {
-                draggingPiece.shape.forEach((row, r) => {
-                    row.forEach((val, c) => { if (val) grid[gridY + r][gridX + c] = draggingPiece.color; });
-                });
-                playSound(250, 'square', 0.1);
-                hand = hand.filter(p => p !== draggingPiece);
-                checkLines(); refillHand(); checkGameOver();
+            const tw = draggingPiece.shape[0].length*CELL_SIZE, th = draggingPiece.shape.length*CELL_SIZE;
+            const gx = Math.round((mousePos.x - tw/2) / CELL_SIZE), gy = Math.round((mousePos.y - th/2) / CELL_SIZE);
+            if (canPlace(draggingPiece.shape, gy, gx)) {
+                playSfx(200, 'square', 0.1, 0.1);
+                draggingPiece.shape.forEach((row, r) => row.forEach((v, c) => { if (v) grid[gy+r][gx+c] = draggingPiece.color; }));
+                hand = hand.filter(p => p !== draggingPiece); checkLines(); refillHand();
+                if (!hand.some(p => { for(let r=0; r<=GRID_SIZE-p.shape.length; r++) for(let c=0; c<=GRID_SIZE-p.shape[0].length; c++) if(canPlace(p.shape,r,c)) return true; return false; })) {
+                    isGameRunning = false; 
+                    document.getElementById('final-score-text').innerText = "SCORE: " + score; 
+                    document.getElementById('game-over').classList.remove('hidden');
+                }
             }
             draggingPiece = null;
         }
     });
 
-    function checkGameOver() {
-        const possible = hand.some(piece => {
-            for (let r = 0; r <= GRID_SIZE - piece.shape.length; r++) {
-                for (let c = 0; c <= GRID_SIZE - piece.shape[0].length; c++) {
-                    if (canPlace(piece.shape, r, c)) return true;
-                }
-            }
-            return false;
-        });
-        if (!possible) {
-            isGameRunning = false;
-            document.getElementById('final-score').innerText = "SCORE: " + score;
-            document.getElementById('game-over').classList.remove('hidden');
-        }
-    }
-
-    class Particle {
-        constructor(x, y, color) {
-            this.x = x; this.y = y; this.size = Math.random() * 5 + 2;
-            this.speedX = (Math.random() - 0.5) * 10;
-            this.speedY = (Math.random() - 0.5) * 10;
-            this.color = color; this.alpha = 1;
-        }
-        update() { this.x += this.speedX; this.y += this.speedY; this.alpha -= 0.03; }
-        draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.size, this.size); ctx.restore(); }
-    }
-    function createExplosion(x, y, color) { for(let i=0; i<8; i++) particles.push(new Particle(x+20, y+20, color)); }
-
     function startGame() {
+        if (!username) {
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('login-menu').classList.remove('hidden');
+            return;
+        }
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        bgMusic.play().catch(() => {});
+        playTrack(currentTrack);
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('game-over').classList.add('hidden');
-        isGameRunning = true;
-        initData();
-        render();
-    }
-
-    function restartGame() {
-        playSound(300, 'sine', 0.2);
-        startGame();
+        document.getElementById('leaderboard-menu').classList.add('hidden');
+        isGameRunning = true; initGame(); render();
     }
 
     function showMenu() {
         isGameRunning = false;
-        document.getElementById('main-menu').classList.remove('hidden');
+        document.getElementById('login-menu').classList.add('hidden');
+        document.getElementById('leaderboard-menu').classList.add('hidden');
         document.getElementById('game-over').classList.add('hidden');
+        document.getElementById('main-menu').classList.remove('hidden');
+        if (username) document.getElementById('welcome-msg').innerText = "READY, " + username + "?";
     }
 
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js');
-    }
+    function restartGame() { startGame(); }
+    window.onload = () => { 
+        window.speechSynthesis.getVoices(); // Предзагрузка голосов
+        if (!username) document.getElementById('welcome-msg').innerText = "WELCOME!"; 
+        else showMenu(); 
+    };
 </script>
 </body>
 </html>

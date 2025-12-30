@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ffcc">
+    <title>Neon Block Puzzle</title>
+    <style>
+        :root {
+            --primary-color: #00ffcc;
+            --secondary-color: #ff0066;
+            --bg-color: #050505;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none; /* Запрещает скролл страницы пальцем */
+        }
+
+        #game-container {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .stats {
+            width: 90%;
+            max-width: 420px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px var(--primary-color);
+        }
+
+        canvas {
+            background: #000;
+            border: 2px solid rgba(0, 255, 204, 0.3);
+            border-radius: 10px;
+            max-width: 95vw; /* Адаптивность под экран телефона */
+            max-height: 75vh;
+            height: auto;
+            touch-action: none; /* Важно для тач-событий */
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .hidden { display: none !important; }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .menu-btn {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: transparent;
+            color: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 50px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        #beat-fx {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            border: 0px solid var(--primary-color);
+            box-sizing: border-box;
+            transition: border-width 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="beat-fx"></div>
+        <div class="stats">
+            <span>SCORE: <span id="score">0</span></span>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="main-menu" class="overlay">
+            <h1>NEON BLOCKS</h1>
+            <button class="menu-btn" onclick="startGame()">PLAY NOW</button>
+        </div>
+
+        <div id="game-over" class="overlay hidden">
+            <h1 style="color: var(--secondary-color);">GAME OVER</h1>
+            <p id="final-score" style="margin-bottom: 20px;">SCORE: 0</p>
+            <button class="menu-btn" onclick="location.reload()">RETRY</button>
+        </div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    
+    const GRID_SIZE = 10;
+    const CELL_SIZE = 42;
+    const BOARD_SIZE = GRID_SIZE * CELL_SIZE;
+    const HAND_HEIGHT = 160;
+
+    canvas.width = BOARD_SIZE;
+    canvas.height = BOARD_SIZE + HAND_HEIGHT;
+
+    // Звуки (Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3');
+    bgMusic.loop = true;
+
+    function playSound(freq, type, duration, vol = 0.1) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
+
+    const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff', '#ffffff'];
+    const SHAPES = [
+        [[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]],
+        [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]], [[1,0],[1,1],[0,1]]
+    ];
+
+    let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+    let hand = [];
+    let score = 0;
+    let particles = [];
+    let draggingPiece = null;
+    let mousePos = { x: 0, y: 0 };
+    let isGameRunning = false;
+
+    function refillHand() {
+        if (hand.length === 0) {
+            for (let i = 0; i < 3; i++) {
+                hand.push({
+                    shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+                    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+                    x: (BOARD_SIZE / 3) * i + (BOARD_SIZE / 6),
+                    y: BOARD_SIZE + (HAND_HEIGHT / 2),
+                    scale: 0.55
+                });
+            }
+        }
+    }
+
+    function drawBlock(x, y, color, scale = 1, alpha = 1) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        const s = CELL_SIZE * scale;
+        const offset = (CELL_SIZE - s) / 2;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = color;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(x + offset + 1, y + offset + 1, s - 2, s - 2, 4 * scale);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawPiece(piece, centerX, centerY, scale, alpha = 1) {
+        const totalW = piece.shape[0].length * CELL_SIZE * scale;
+        const totalH = piece.shape.length * CELL_SIZE * scale;
+        piece.shape.forEach((row, r) => {
+            row.forEach((value, c) => {
+                if (value) {
+                    const x = centerX - totalW / 2 + (c * CELL_SIZE * scale);
+                    const y = centerY - totalH / 2 + (r * CELL_SIZE * scale);
+                    drawBlock(x, y, piece.color, scale, alpha);
+                }
+            });
+        });
+    }
+
+    function render() {
+        if (!isGameRunning) return;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Сетка
+        ctx.strokeStyle = '#111';
+        for (let i = 0; i <= GRID_SIZE; i++) {
+            ctx.beginPath(); ctx.moveTo(i * CELL_SIZE, 0); ctx.lineTo(i * CELL_SIZE, BOARD_SIZE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(0, i * CELL_SIZE); ctx.lineTo(BOARD_SIZE, i * CELL_SIZE); ctx.stroke();
+        }
+
+        // Поле
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c]) drawBlock(c * CELL_SIZE, r * CELL_SIZE, grid[r][c]);
+            }
+        }
+
+        // Рука
+        hand.forEach(p => { if (p !== draggingPiece) drawPiece(p, p.x, p.y, p.scale); });
+
+        // Тянем
+        if (draggingPiece) {
+            const totalW = draggingPiece.shape[0].length * CELL_SIZE;
+            const totalH = draggingPiece.shape.length * CELL_SIZE;
+            const gridX = Math.round((mousePos.x - totalW/2) / CELL_SIZE);
+            const gridY = Math.round((mousePos.y - totalH/2) / CELL_SIZE);
+
+            if (canPlace(draggingPiece.shape, gridY, gridX)) {
+                draggingPiece.shape.forEach((row, r) => {
+                    row.forEach((val, c) => {
+                        if (val) drawBlock((gridX + c) * CELL_SIZE, (gridY + r) * CELL_SIZE, draggingPiece.color, 1, 0.3);
+                    });
+                });
+            }
+            drawPiece(draggingPiece, mousePos.x, mousePos.y, 1);
+        }
+
+        particles.forEach((p, i) => { p.update(); p.draw(); if (p.alpha <= 0) particles.splice(i, 1); });
+        requestAnimationFrame(render);
+    }
+
+    function canPlace(shape, row, col) {
+        if (row < 0 || col < 0 || row + shape.length > GRID_SIZE || col + shape[0].length > GRID_SIZE) return false;
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c] && grid[row + r][col + c]) return false;
+            }
+        }
+        return true;
+    }
+
+    function checkLines() {
+        let rows = [], cols = [];
+        for (let r = 0; r < GRID_SIZE; r++) if (grid[r].every(cell => cell !== null)) rows.push(r);
+        for (let c = 0; c < GRID_SIZE; c++) {
+            let full = true;
+            for (let r = 0; r < GRID_SIZE; r++) if (!grid[r][c]) full = false;
+            if (full) cols.push(c);
+        }
+        if (rows.length || cols.length) {
+            playSound(600, 'sawtooth', 0.4);
+            rows.forEach(r => { for(let c=0; c<GRID_SIZE; c++) { createExplosion(c*CELL_SIZE, r*CELL_SIZE, grid[r][c]); grid[r][c] = null; } });
+            cols.forEach(c => { for(let r=0; r<GRID_SIZE; r++) { if(grid[r][c]) createExplosion(c*CELL_SIZE, r*CELL_SIZE, grid[r][c]); grid[r][c] = null; } });
+            score += (rows.length + cols.length) * 100;
+            scoreEl.innerText = score;
+        }
+    }
+
+    // Pointer Events (Универсальное управление)
+    canvas.addEventListener('pointerdown', e => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top) * scaleY;
+
+        hand.forEach(p => {
+            const pw = p.shape[0].length * CELL_SIZE * p.scale;
+            const ph = p.shape.length * CELL_SIZE * p.scale;
+            if (mx > p.x - pw/2 && mx < p.x + pw/2 && my > p.y - ph/2 && my < p.y + ph/2) {
+                draggingPiece = p;
+                canvas.setPointerCapture(e.pointerId); // Захват фокуса
+                playSound(400, 'sine', 0.1);
+            }
+        });
+    });
+
+    canvas.addEventListener('pointermove', e => {
+        if (!draggingPiece) return;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        mousePos.x = (e.clientX - rect.left) * scaleX;
+        mousePos.y = (e.clientY - rect.top) * scaleY;
+    });
+
+    canvas.addEventListener('pointerup', e => {
+        if (draggingPiece) {
+            const totalW = draggingPiece.shape[0].length * CELL_SIZE;
+            const totalH = draggingPiece.shape.length * CELL_SIZE;
+            const gridX = Math.round((mousePos.x - totalW/2) / CELL_SIZE);
+            const gridY = Math.round((mousePos.y - totalH/2) / CELL_SIZE);
+
+            if (canPlace(draggingPiece.shape, gridY, gridX)) {
+                draggingPiece.shape.forEach((row, r) => {
+                    row.forEach((val, c) => { if (val) grid[gridY + r][gridX + c] = draggingPiece.color; });
+                });
+                playSound(200, 'square', 0.1);
+                hand = hand.filter(p => p !== draggingPiece);
+                checkLines(); refillHand(); checkGameOver();
+            }
+            draggingPiece = null;
+        }
+    });
+
+    function checkGameOver() {
+        const possible = hand.some(piece => {
+            for (let r = 0; r <= GRID_SIZE - piece.shape.length; r++) {
+                for (let c = 0; c <= GRID_SIZE - piece.shape[0].length; c++) {
+                    if (canPlace(piece.shape, r, c)) return true;
+                }
+            }
+            return false;
+        });
+        if (!possible) {
+            isGameRunning = false;
+            bgMusic.pause();
+            document.getElementById('final-score').innerText = "SCORE: " + score;
+            document.getElementById('game-over').classList.remove('hidden');
+        }
+    }
+
+    class Particle {
+        constructor(x, y, color) {
+            this.x = x; this.y = y; this.size = Math.random() * 5 + 2;
+            this.speedX = (Math.random() - 0.5) * 10;
+            this.speedY = (Math.random() - 0.5) * 10;
+            this.color = color; this.alpha = 1;
+        }
+        update() { this.x += this.speedX; this.y += this.speedY; this.alpha -= 0.03; }
+        draw() { ctx.save(); ctx.globalAlpha = this.alpha; ctx.fillStyle = this.color; ctx.fillRect(this.x, this.y, this.size, this.size); ctx.restore(); }
+    }
+    function createExplosion(x, y, color) { for(let i=0; i<8; i++) particles.push(new Particle(x+20, y+20, color)); }
+
+    function startGame() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        bgMusic.play().catch(e => console.log("Music blocked"));
+        document.getElementById('main-menu').classList.add('hidden');
+        isGameRunning = true;
+        refillHand(); render();
+    }
+
+    // Регистрация Service Worker для PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+</script>
+</body>
+</html>

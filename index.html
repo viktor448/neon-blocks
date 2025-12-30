@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <title>Neon Blocks: Global Ultimate</title>
+    <title>Neon Blocks: Pro Edition</title>
     <style>
         :root {
             --primary-color: #00ffcc;
@@ -26,11 +26,13 @@
         #game-container {
             position: relative;
             display: flex; flex-direction: column;
-            align-items: center; width: 100%;
+            align-items: center;
+            width: 100%;
+            max-width: 420px;
         }
 
         .top-bar {
-            width: 95vw; max-width: 420px;
+            width: 95%;
             display: flex; justify-content: space-between;
             align-items: center; padding: 10px 0; z-index: 5;
         }
@@ -54,26 +56,40 @@
             height: auto; box-shadow: 0 0 40px rgba(0,0,0,0.7);
         }
 
+        /* ИСПРАВЛЕННОЕ ЦЕНТРИРОВАНИЕ */
+        #perfect-score-msg {
+            position: absolute;
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.3);
+            font-size: 3.2rem; font-weight: 900;
+            color: #fff; text-shadow: 0 0 20px var(--perfect-color), 0 0 60px #fff;
+            opacity: 0; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 200; pointer-events: none; text-align: center; width: 100%;
+            text-transform: uppercase; font-style: italic;
+        }
+        #perfect-score-msg.active { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.96); display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(20px);
+            border-radius: 12px;
         }
         .hidden { display: none !important; }
 
-        h1 { font-size: 2.8rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; text-transform: uppercase; font-style: italic; }
+        h1 { font-size: 2.5rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; text-transform: uppercase; }
 
         .menu-btn { 
-            padding: 15px 40px; font-size: 1.2rem; background: transparent; 
+            padding: 15px 30px; font-size: 1.1rem; background: transparent; 
             color: white; border: 2px solid var(--primary-color); 
             border-radius: 50px; text-transform: uppercase; font-weight: 900; 
-            margin: 10px; cursor: pointer; min-width: 200px;
+            margin: 10px; cursor: pointer; min-width: 180px;
         }
 
         #name-input { 
             background: transparent; border: 2px solid var(--primary-color); 
             color: white; padding: 12px; font-size: 1.4rem; text-align: center; 
-            border-radius: 10px; width: 80%; margin-bottom: 20px; 
+            border-radius: 10px; width: 80%; margin-bottom: 20px; outline: none;
         }
 
         #leaderboard-box {
@@ -82,22 +98,13 @@
             padding: 10px; background: rgba(0,0,0,0.4); border-radius: 10px;
         }
         .leader-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; font-size: 0.9rem; }
-        .current-user { color: var(--primary-color); font-weight: bold; }
+        .current-user { color: var(--primary-color); font-weight: bold; background: rgba(0,255,204,0.1); }
 
-        #perfect-score-msg {
-            position: absolute; top: 35%; font-size: 3rem; font-weight: 900; 
-            color: #fff; text-shadow: 0 0 20px var(--perfect-color), 0 0 50px #fff;
-            opacity: 0; transform: scale(0.3) rotate(-10deg); transition: 0.4s; z-index: 200; pointer-events: none;
-        }
-        #perfect-score-msg.active { opacity: 1; transform: scale(1.2) rotate(0deg); animation: flash 0.5s infinite; }
-
-        @keyframes flash { 0% { filter: brightness(1); } 50% { filter: brightness(1.5); } 100% { filter: brightness(1); } }
-        
         #track-display {
             position: absolute; top: 65px; font-size: 0.8rem; color: var(--primary-color);
             font-weight: bold; opacity: 0; transition: opacity 0.5s; z-index: 20;
         }
-        #beat-fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 0px solid var(--primary-color); box-sizing: border-box; transition: 0.1s; z-index: 10; }
+        #beat-fx { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; border: 0px solid var(--primary-color); box-sizing: border-box; transition: 0.1s; z-index: 10; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -121,12 +128,14 @@
 
         <canvas id="gameCanvas"></canvas>
 
+        <!-- Ввод имени -->
         <div id="login-menu" class="overlay hidden">
-            <h1>WHO ARE YOU?</h1>
-            <input type="text" id="name-input" placeholder="USERNAME" maxlength="12">
-            <button class="menu-btn" onclick="saveName()">CONFIRM</button>
+            <h1>YOUR NAME</h1>
+            <input type="text" id="name-input" placeholder="PLAYER" maxlength="10">
+            <button class="menu-btn" onclick="saveName()">SAVE</button>
         </div>
 
+        <!-- Меню -->
         <div id="main-menu" class="overlay">
             <h1>NEON BLOCKS</h1>
             <p id="welcome-msg" style="color: #666; margin-bottom: 20px;"></p>
@@ -134,15 +143,17 @@
             <button class="menu-btn" onclick="showLeaderboard()">GLOBAL TOP</button>
         </div>
 
+        <!-- Таблица -->
         <div id="leaderboard-menu" class="overlay hidden">
             <h1>GLOBAL TOP</h1>
-            <div id="leaderboard-box">LOADING...</div>
+            <div id="leaderboard-box">CONNECTING...</div>
             <button class="menu-btn" onclick="showMenu()">BACK</button>
         </div>
 
+        <!-- Финиш -->
         <div id="game-over" class="overlay hidden">
-            <h1 style="color: var(--secondary-color);">FINISH!</h1>
-            <p id="final-score-text" style="font-size: 1.5rem; color: #fff; margin-bottom: 5px;">0</p>
+            <h1 style="color: var(--secondary-color);">OVER!</h1>
+            <p id="final-score-text" style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">0</p>
             <button class="menu-btn" onclick="restartGame()">RETRY</button>
         </div>
     </div>
@@ -154,13 +165,12 @@
     const highScoreEl = document.getElementById('high-score');
     const trackDisplay = document.getElementById('track-display');
 
-    // КЛЮЧИ DREAMLO
-    const DREAMLO_PUBLIC_KEY = "677309068f40930da01d2ec7";
-    const DREAMLO_PRIVATE_KEY = "G4_S8_pT20mI0vW6v-E3XAsFq-mJofREuV-nOfT3l1lQ";
+    // DREAMLO KEYS
+    const PUB_KEY = "677309068f40930da01d2ec7";
+    const PRIV_KEY = "G4_S8_pT20mI0vW6v-E3XAsFq-mJofREuV-nOfT3l1lQ";
 
     const GRID_SIZE = 10, CELL_SIZE = 42, BOARD_SIZE = 420, HAND_HEIGHT = 160;
-    canvas.width = BOARD_SIZE;
-    canvas.height = BOARD_SIZE + HAND_HEIGHT;
+    canvas.width = BOARD_SIZE; canvas.height = BOARD_SIZE + HAND_HEIGHT;
 
     let username = localStorage.getItem('neonBlocks_user');
     let highScore = localStorage.getItem('neonBlocks_best') || 0;
@@ -170,7 +180,7 @@
     const playlist = Array.from({length: 10}, (_, i) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${i+1}.mp3`);
     let currentTrack = 0;
     const bgMusic = new Audio();
-    bgMusic.volume = 0.3;
+    bgMusic.volume = 0.25;
 
     function playTrack(idx) {
         currentTrack = idx % playlist.length;
@@ -183,7 +193,7 @@
     bgMusic.onended = () => playTrack(currentTrack + 1);
     function nextTrack() { playTrack(currentTrack + 1); }
 
-    // --- ЗВУКОВОЙ ДВИЖОК ---
+    // --- СИНТЕЗАТОР ЭПИЧНЫХ ЗВУКОВ ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSfx(freq, type, duration, vol = 0.1) {
@@ -202,24 +212,16 @@
         msg.classList.add('active');
         setTimeout(() => msg.classList.remove('active'), 2500);
         
-        // Сейсмический удар
-        playSfx(40, 'sawtooth', 1.5, 0.4);
-        playSfx(80, 'sine', 2.0, 0.5);
-
-        if ('speechSynthesis' in window) {
-            const ut = new SpeechSynthesisUtterance("Perfect score!");
-            const voices = window.speechSynthesis.getVoices();
-            // Ищем самый низкий голос (обычно David или Google English)
-            const deepVoice = voices.find(v => v.name.includes("David") || v.name.includes("Male")) || voices[0];
-            ut.voice = deepVoice;
-            ut.pitch = 0.1; // Максимально низкий
-            ut.rate = 0.4;  // Очень медленный
-            ut.volume = 1;
-            window.speechSynthesis.speak(ut);
-        }
+        // КИНЕМАТОГРАФИЧЕСКИЙ БАС (BRAAM)
+        playSfx(40, 'sawtooth', 2.0, 0.4);
+        playSfx(45, 'sawtooth', 2.0, 0.3);
+        playSfx(110, 'sine', 1.5, 0.2);
+        
+        // Механический отзвук
+        setTimeout(() => playSfx(30, 'square', 0.5, 0.2), 300);
     }
 
-    // --- ЛИДЕРБОРД ---
+    // --- РАБОЧИЙ ЛИДЕРБОРД (JSONP) ---
     function saveName() {
         const val = document.getElementById('name-input').value.trim();
         if (val.length >= 2) {
@@ -230,45 +232,44 @@
         }
     }
 
-    async function showLeaderboard() {
+    function showLeaderboard() {
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('leaderboard-menu').classList.remove('hidden');
         const box = document.getElementById('leaderboard-box');
-        box.innerHTML = "LOADING...";
+        box.innerHTML = "CONNECTING...";
 
-        try {
-            // Прямой запрос к Dreamlo
-            const response = await fetch(`https://www.dreamlo.com/lb/${DREAMLO_PUBLIC_KEY}/json`);
-            if (!response.ok) throw new Error('Network error');
-            const data = await response.json();
-            
+        // JSONP обходит CORS на GitHub Pages
+        const callbackName = 'lb_' + Date.now();
+        const script = document.createElement('script');
+        window[callbackName] = function(data) {
             if (!data.dreamlo || !data.dreamlo.leaderboard || !data.dreamlo.leaderboard.entry) {
                 box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
-                return;
+            } else {
+                let items = data.dreamlo.leaderboard.entry;
+                if (!Array.isArray(items)) items = [items];
+                box.innerHTML = items.map((e, i) => `
+                    <div class="leader-item ${e.name === username ? 'current-user' : ''}">
+                        <span>${i+1}. ${e.name}</span>
+                        <span>${e.score}</span>
+                    </div>
+                `).join('');
             }
-            
-            let scores = data.dreamlo.leaderboard.entry;
-            if (!Array.isArray(scores)) scores = [scores];
-            
-            box.innerHTML = scores.map((e, i) => `
-                <div class="leader-item ${e.name === username ? 'current-user' : ''}">
-                    <span>${i+1}. ${e.name}</span>
-                    <span>${e.score}</span>
-                </div>
-            `).join('');
-        } catch(e) { 
-            box.innerHTML = "<div style='text-align:center'>SERVER ERROR (CHECK INTERNET)</div>"; 
-        }
+            delete window[callbackName];
+            script.remove();
+        };
+        script.src = `https://www.dreamlo.com/lb/${PUB_KEY}/jsonp/${callbackName}`;
+        script.onerror = () => { box.innerHTML = "SERVER OFFLINE"; };
+        document.body.appendChild(script);
     }
 
     function submitScore(s) {
-        if (username) {
-            // Используем приватный ключ для отправки
-            fetch(`https://www.dreamlo.com/lb/${DREAMLO_PRIVATE_KEY}/add/${encodeURIComponent(username)}/${s}`);
-        }
+        if (!username) return;
+        // Отправка через невидимый запрос
+        const img = new Image();
+        img.src = `https://www.dreamlo.com/lb/${PRIV_KEY}/add/${encodeURIComponent(username)}/${s}`;
     }
 
-    // --- ЛОГИКА ИГРЫ ---
+    // --- ИГРА ---
     const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff'];
     const SHAPES = [[[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]];
     let grid = [], hand = [], draggingPiece = null, mousePos = {x:0, y:0}, score = 0, isGameRunning = false, particles = [];
@@ -310,12 +311,10 @@
         if (!isGameRunning) return;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Зона полки
         ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, BOARD_SIZE, BOARD_SIZE, HAND_HEIGHT);
-        ctx.strokeStyle = '#00ffcc66'; ctx.lineWidth = 3;
+        ctx.strokeStyle = '#00ffcc66'; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(0, BOARD_SIZE); ctx.lineTo(BOARD_SIZE, BOARD_SIZE); ctx.stroke();
 
-        // Сетка
         ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
         for (let i = 0; i <= GRID_SIZE; i++) {
             ctx.beginPath(); ctx.moveTo(i*CELL_SIZE, 0); ctx.lineTo(i*CELL_SIZE, BOARD_SIZE); ctx.stroke();
@@ -339,34 +338,32 @@
 
     function canPlace(sh, row, col) {
         if (row < 0 || col < 0 || row + sh.length > GRID_SIZE || col + sh[0].length > GRID_SIZE) return false;
-        for (let r=0; r<sh.length; r++) for (let c=0; c<sh[r].length; c++) if (sh[r][c] && grid[row+r][col+c]) return false;
+        for (let r = 0; r < sh.length; r++) {
+            for (let c = 0; c < sh[r].length; c++) if (sh[r][c] && grid[row + r][col + c]) return false;
+        }
         return true;
     }
 
     function checkLines() {
         let rs = [], cs = [];
-        for (let r=0; r<GRID_SIZE; r++) if (grid[r].every(v => v !== null)) rs.push(r);
-        for (let c=0; c<GRID_SIZE; c++) { let f=true; for (let r=0; r<GRID_SIZE; r++) if(!grid[r][c]) f=false; if(f) cs.push(c); }
+        for (let r = 0; r < GRID_SIZE; r++) if (grid[r].every(v => v !== null)) rs.push(r);
+        for (let c = 0; c < GRID_SIZE; c++) { let f=true; for (let r = 0; r < GRID_SIZE; r++) if(!grid[r][c]) f=false; if(f) cs.push(c); }
         if (rs.length || cs.length) {
-            playSfx(600, 'triangle', 0.3, 0.2);
+            playSfx(600, 'triangle', 0.3, 0.15);
             rs.forEach(r => { grid[r].fill(null); for(let c=0; c<GRID_SIZE; c++) createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); });
             cs.forEach(c => { for(let r=0; r<GRID_SIZE; r++) { grid[r][c]=null; createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); } });
-            
             score += (rs.length + cs.length) * 100;
             scoreEl.innerText = score;
-            
             if (score > highScore) { 
                 highScore = score; highScoreEl.innerText = highScore; 
                 localStorage.setItem('neonBlocks_best', highScore); 
                 submitScore(highScore); 
             }
-            
-            // Озвучка за каждую 1000 очков
             if (score > 0 && score % 1000 === 0) announcePerfect();
         }
     }
 
-    function createExplosion(x,y,c) { for(let i=0; i<5; i++) particles.push({x:x+20, y:y+20, c:c, a:1, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, update(){this.x+=this.vx;this.y+=this.vy;this.a-=0.05;}, draw(){ctx.globalAlpha=this.a;ctx.fillStyle=this.c;ctx.fillRect(this.x,this.y,4,4);ctx.globalAlpha=1;}}); }
+    function createExplosion(x,y,c) { for(let i=0; i<5; i++) particles.push({x:x+20, y:y+20, c:c, a:1, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8, update(){this.x+=this.vx;this.y+=this.vy;this.a-=0.05;}, draw(){ctx.globalAlpha=this.a;ctx.fillStyle=this.c;ctx.fillRect(this.x,this.y,4,4);ctx.globalAlpha=1;}}); }
 
     canvas.addEventListener('pointerdown', e => {
         const r = canvas.getBoundingClientRect(), mx = (e.clientX-r.left)*(canvas.width/r.width), my = (e.clientY-r.top)*(canvas.height/r.height);
@@ -392,9 +389,7 @@
                 draggingPiece.shape.forEach((row, r) => row.forEach((v, c) => { if (v) grid[gy+r][gx+c] = draggingPiece.color; }));
                 hand = hand.filter(p => p !== draggingPiece); checkLines(); refillHand();
                 if (!hand.some(p => { for(let r=0; r<=GRID_SIZE-p.shape.length; r++) for(let c=0; c<=GRID_SIZE-p.shape[0].length; c++) if(canPlace(p.shape,r,c)) return true; return false; })) {
-                    isGameRunning = false; 
-                    document.getElementById('final-score-text').innerText = "SCORE: " + score; 
-                    document.getElementById('game-over').classList.remove('hidden');
+                    isGameRunning = false; document.getElementById('final-score-text').innerText = "SCORE: " + score; document.getElementById('game-over').classList.remove('hidden');
                 }
             }
             draggingPiece = null;
@@ -402,11 +397,7 @@
     });
 
     function startGame() {
-        if (!username) {
-            document.getElementById('main-menu').classList.add('hidden');
-            document.getElementById('login-menu').classList.remove('hidden');
-            return;
-        }
+        if (!username) return document.getElementById('login-menu').classList.remove('hidden');
         if (audioCtx.state === 'suspended') audioCtx.resume();
         playTrack(currentTrack);
         document.getElementById('main-menu').classList.add('hidden');
@@ -425,11 +416,7 @@
     }
 
     function restartGame() { startGame(); }
-    window.onload = () => { 
-        window.speechSynthesis.getVoices(); // Предзагрузка голосов
-        if (!username) document.getElementById('welcome-msg').innerText = "WELCOME!"; 
-        else showMenu(); 
-    };
+    window.onload = () => { if (!username) document.getElementById('welcome-msg').innerText = "WELCOME!"; else showMenu(); };
 </script>
 </body>
 </html>

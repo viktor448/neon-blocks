@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <title>Neon Blocks: Pro Edition</title>
+    <title>Neon Blocks: Pro</title>
     <style>
         :root {
             --primary-color: #00ffcc;
@@ -19,7 +19,7 @@
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             height: 100vh; background-color: var(--bg-color);
-            color: white; font-family: 'Segoe UI', sans-serif;
+            color: white; font-family: 'Segoe UI', Tahoma, sans-serif;
             overflow: hidden; user-select: none; touch-action: none;
         }
 
@@ -32,12 +32,12 @@
         }
 
         .top-bar {
-            width: 95%;
+            width: 92%;
             display: flex; justify-content: space-between;
             align-items: center; padding: 10px 0; z-index: 5;
         }
 
-        .stats-group { display: flex; flex-direction: column; gap: 2px; }
+        .stats-group { display: flex; flex-direction: column; }
         .score-container { font-size: 1.2rem; font-weight: bold; color: var(--primary-color); text-shadow: 0 0 10px var(--primary-color); }
         .record-container { font-size: 0.8rem; font-weight: bold; color: var(--perfect-color); text-transform: uppercase; }
 
@@ -45,7 +45,7 @@
         .icon-btn {
             background: rgba(255,255,255,0.05); border: 1px solid var(--primary-color);
             color: var(--primary-color); padding: 8px 12px; border-radius: 8px;
-            cursor: pointer; font-size: 0.8rem; font-weight: bold;
+            cursor: pointer; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;
         }
 
         canvas {
@@ -56,34 +56,43 @@
             height: auto; box-shadow: 0 0 40px rgba(0,0,0,0.7);
         }
 
-        /* ИСПРАВЛЕННОЕ ЦЕНТРИРОВАНИЕ */
-        #perfect-score-msg {
+        /* ИДЕАЛЬНОЕ ЦЕНТРИРОВАНИЕ УВЕДОМЛЕНИЯ */
+        .perfect-overlay {
             position: absolute;
             top: 40%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.3);
-            font-size: 3.2rem; font-weight: 900;
-            color: #fff; text-shadow: 0 0 20px var(--perfect-color), 0 0 60px #fff;
-            opacity: 0; transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 200; pointer-events: none; text-align: center; width: 100%;
-            text-transform: uppercase; font-style: italic;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            pointer-events: none;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        #perfect-score-msg.active { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+
+        #perfect-score-msg {
+            font-size: 3.5rem; font-weight: 900;
+            color: #fff; text-shadow: 0 0 20px var(--perfect-color), 0 0 60px #fff;
+            opacity: 0; transform: scale(0.2);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase; font-style: italic; text-align: center;
+        }
+        #perfect-score-msg.active { opacity: 1; transform: scale(1); }
 
         .overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.96); display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(20px);
-            border-radius: 12px;
+            background: rgba(0,0,0,0.97); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 100;
+            backdrop-filter: blur(15px); border-radius: 12px;
         }
         .hidden { display: none !important; }
 
-        h1 { font-size: 2.5rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; text-transform: uppercase; }
+        h1 { font-size: 2.5rem; color: var(--primary-color); text-shadow: 0 0 20px var(--primary-color); margin-bottom: 20px; }
 
         .menu-btn { 
-            padding: 15px 30px; font-size: 1.1rem; background: transparent; 
+            padding: 15px 35px; font-size: 1.1rem; background: transparent; 
             color: white; border: 2px solid var(--primary-color); 
             border-radius: 50px; text-transform: uppercase; font-weight: 900; 
-            margin: 10px; cursor: pointer; min-width: 180px;
+            margin: 10px; cursor: pointer; min-width: 200px;
         }
 
         #name-input { 
@@ -112,7 +121,10 @@
     <div id="game-container">
         <div id="beat-fx"></div>
         <div id="track-display">TRACK 1/10</div>
-        <div id="perfect-score-msg">PERFECT SCORE!</div>
+        
+        <div class="perfect-overlay">
+            <div id="perfect-score-msg">PERFECT SCORE!</div>
+        </div>
         
         <div class="top-bar">
             <div class="stats-group">
@@ -120,7 +132,7 @@
                 <div class="record-container">BEST: <span id="high-score">0</span></div>
             </div>
             <div class="controls">
-                <button class="icon-btn" onclick="nextTrack()">♪</button>
+                <button class="icon-btn" onclick="nextTrack()">♪ NEXT</button>
                 <button class="icon-btn" onclick="restartGame()">RESET</button>
                 <button class="icon-btn" onclick="showMenu()">MENU</button>
             </div>
@@ -128,14 +140,12 @@
 
         <canvas id="gameCanvas"></canvas>
 
-        <!-- Ввод имени -->
         <div id="login-menu" class="overlay hidden">
             <h1>YOUR NAME</h1>
             <input type="text" id="name-input" placeholder="PLAYER" maxlength="10">
-            <button class="menu-btn" onclick="saveName()">SAVE</button>
+            <button class="menu-btn" onclick="saveName()">START</button>
         </div>
 
-        <!-- Меню -->
         <div id="main-menu" class="overlay">
             <h1>NEON BLOCKS</h1>
             <p id="welcome-msg" style="color: #666; margin-bottom: 20px;"></p>
@@ -143,14 +153,12 @@
             <button class="menu-btn" onclick="showLeaderboard()">GLOBAL TOP</button>
         </div>
 
-        <!-- Таблица -->
         <div id="leaderboard-menu" class="overlay hidden">
             <h1>GLOBAL TOP</h1>
             <div id="leaderboard-box">CONNECTING...</div>
             <button class="menu-btn" onclick="showMenu()">BACK</button>
         </div>
 
-        <!-- Финиш -->
         <div id="game-over" class="overlay hidden">
             <h1 style="color: var(--secondary-color);">OVER!</h1>
             <p id="final-score-text" style="font-size: 1.5rem; color: #fff; margin-bottom: 10px;">0</p>
@@ -176,7 +184,7 @@
     let highScore = localStorage.getItem('neonBlocks_best') || 0;
     highScoreEl.innerText = highScore;
 
-    // --- МУЗЫКА ---
+    // --- ПЛЕЙЛИСТ ---
     const playlist = Array.from({length: 10}, (_, i) => `https://www.soundhelix.com/examples/mp3/SoundHelix-Song-${i+1}.mp3`);
     let currentTrack = 0;
     const bgMusic = new Audio();
@@ -188,12 +196,12 @@
         bgMusic.play().catch(() => {});
         trackDisplay.innerText = `TRACK ${currentTrack + 1}/10`;
         trackDisplay.style.opacity = 1;
-        setTimeout(() => trackDisplay.style.opacity = 0, 2000);
+        setTimeout(() => trackDisplay.style.opacity = 0, 2500);
     }
     bgMusic.onended = () => playTrack(currentTrack + 1);
     function nextTrack() { playTrack(currentTrack + 1); }
 
-    // --- СИНТЕЗАТОР ЭПИЧНЫХ ЗВУКОВ ---
+    // --- ЗВУКОВОЙ ДВИЖОК ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSfx(freq, type, duration, vol = 0.1) {
@@ -203,7 +211,7 @@
         osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
         osc.connect(gain); gain.connect(audioCtx.destination);
         gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
         osc.start(); osc.stop(audioCtx.currentTime + duration);
     }
 
@@ -212,16 +220,16 @@
         msg.classList.add('active');
         setTimeout(() => msg.classList.remove('active'), 2500);
         
-        // КИНЕМАТОГРАФИЧЕСКИЙ БАС (BRAAM)
-        playSfx(40, 'sawtooth', 2.0, 0.4);
-        playSfx(45, 'sawtooth', 2.0, 0.3);
-        playSfx(110, 'sine', 1.5, 0.2);
+        // МОЩНЫЙ BRAAM ЭФФЕКТ (ВМЕСТО ГОЛОСА)
+        playSfx(40, 'sawtooth', 2.0, 0.5); // Глубокий рык
+        playSfx(44, 'sawtooth', 2.0, 0.3); // Резонанс
+        playSfx(100, 'sine', 1.5, 0.4);    // Удар
         
-        // Механический отзвук
-        setTimeout(() => playSfx(30, 'square', 0.5, 0.2), 300);
+        // Эхо-эффект
+        setTimeout(() => playSfx(30, 'sawtooth', 1.0, 0.2), 400);
     }
 
-    // --- РАБОЧИЙ ЛИДЕРБОРД (JSONP) ---
+    // --- ГЛОБАЛЬНЫЙ РЕЙТИНГ (JSONP - САМЫЙ СТАБИЛЬНЫЙ) ---
     function saveName() {
         const val = document.getElementById('name-input').value.trim();
         if (val.length >= 2) {
@@ -236,14 +244,14 @@
         document.getElementById('main-menu').classList.add('hidden');
         document.getElementById('leaderboard-menu').classList.remove('hidden');
         const box = document.getElementById('leaderboard-box');
-        box.innerHTML = "CONNECTING...";
+        box.innerHTML = "LOADING...";
 
-        // JSONP обходит CORS на GitHub Pages
-        const callbackName = 'lb_' + Date.now();
+        const cbName = 'jsonp_cb_' + Math.round(Math.random()*100000);
         const script = document.createElement('script');
-        window[callbackName] = function(data) {
+        
+        window[cbName] = function(data) {
             if (!data.dreamlo || !data.dreamlo.leaderboard || !data.dreamlo.leaderboard.entry) {
-                box.innerHTML = "<div style='text-align:center'>BE THE FIRST!</div>";
+                box.innerHTML = "<div style='text-align:center'>EMPTY! BE THE FIRST!</div>";
             } else {
                 let items = data.dreamlo.leaderboard.entry;
                 if (!Array.isArray(items)) items = [items];
@@ -254,30 +262,29 @@
                     </div>
                 `).join('');
             }
-            delete window[callbackName];
+            delete window[cbName];
             script.remove();
         };
-        script.src = `https://www.dreamlo.com/lb/${PUB_KEY}/jsonp/${callbackName}`;
-        script.onerror = () => { box.innerHTML = "SERVER OFFLINE"; };
+
+        script.src = `https://www.dreamlo.com/lb/${PUB_KEY}/jsonp/${cbName}`;
+        script.onerror = () => { box.innerHTML = "CONNECTION ERROR (CORS/OFFLINE)"; };
         document.body.appendChild(script);
     }
 
     function submitScore(s) {
         if (!username) return;
-        // Отправка через невидимый запрос
         const img = new Image();
         img.src = `https://www.dreamlo.com/lb/${PRIV_KEY}/add/${encodeURIComponent(username)}/${s}`;
     }
 
-    // --- ИГРА ---
+    // --- ИГРОВАЯ ЛОГИКА ---
     const COLORS = ['#00ffcc', '#ff0066', '#ffff00', '#0077ff', '#ff8800', '#cc00ff'];
     const SHAPES = [[[1]], [[1,1]], [[1],[1]], [[1,1,1]], [[1,1],[1,1]], [[1,1,1],[0,1,0]], [[1,1,1,1]], [[1,1,1],[1,0,0]]];
     let grid = [], hand = [], draggingPiece = null, mousePos = {x:0, y:0}, score = 0, isGameRunning = false, particles = [];
 
     function initGame() {
         grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
-        hand = []; score = 0; scoreEl.innerText = 0;
-        refillHand();
+        hand = []; score = 0; scoreEl.innerText = 0; refillHand();
     }
 
     function refillHand() {
@@ -311,10 +318,12 @@
         if (!isGameRunning) return;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, BOARD_SIZE, BOARD_SIZE, HAND_HEIGHT);
-        ctx.strokeStyle = '#00ffcc66'; ctx.lineWidth = 2;
+        // Зона руки
+        ctx.fillStyle = '#080808'; ctx.fillRect(0, BOARD_SIZE, BOARD_SIZE, HAND_HEIGHT);
+        ctx.strokeStyle = 'rgba(0,255,204,0.3)'; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(0, BOARD_SIZE); ctx.lineTo(BOARD_SIZE, BOARD_SIZE); ctx.stroke();
 
+        // Сетка
         ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
         for (let i = 0; i <= GRID_SIZE; i++) {
             ctx.beginPath(); ctx.moveTo(i*CELL_SIZE, 0); ctx.lineTo(i*CELL_SIZE, BOARD_SIZE); ctx.stroke();
@@ -349,27 +358,23 @@
         for (let r = 0; r < GRID_SIZE; r++) if (grid[r].every(v => v !== null)) rs.push(r);
         for (let c = 0; c < GRID_SIZE; c++) { let f=true; for (let r = 0; r < GRID_SIZE; r++) if(!grid[r][c]) f=false; if(f) cs.push(c); }
         if (rs.length || cs.length) {
-            playSfx(600, 'triangle', 0.3, 0.15);
+            playSfx(600, 'triangle', 0.4, 0.2);
             rs.forEach(r => { grid[r].fill(null); for(let c=0; c<GRID_SIZE; c++) createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); });
             cs.forEach(c => { for(let r=0; r<GRID_SIZE; r++) { grid[r][c]=null; createExplosion(c*CELL_SIZE, r*CELL_SIZE, '#fff'); } });
             score += (rs.length + cs.length) * 100;
             scoreEl.innerText = score;
-            if (score > highScore) { 
-                highScore = score; highScoreEl.innerText = highScore; 
-                localStorage.setItem('neonBlocks_best', highScore); 
-                submitScore(highScore); 
-            }
+            if (score > highScore) { highScore = score; highScoreEl.innerText = highScore; localStorage.setItem('neonBlocks_best', highScore); submitScore(highScore); }
             if (score > 0 && score % 1000 === 0) announcePerfect();
         }
     }
 
-    function createExplosion(x,y,c) { for(let i=0; i<5; i++) particles.push({x:x+20, y:y+20, c:c, a:1, vx:(Math.random()-0.5)*8, vy:(Math.random()-0.5)*8, update(){this.x+=this.vx;this.y+=this.vy;this.a-=0.05;}, draw(){ctx.globalAlpha=this.a;ctx.fillStyle=this.c;ctx.fillRect(this.x,this.y,4,4);ctx.globalAlpha=1;}}); }
+    function createExplosion(x,y,c) { for(let i=0; i<6; i++) particles.push({x:x+20, y:y+20, c:c, a:1, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, update(){this.x+=this.vx;this.y+=this.vy;this.a-=0.04;}, draw(){ctx.globalAlpha=this.a;ctx.fillStyle=this.c;ctx.fillRect(this.x,this.y,4,4);ctx.globalAlpha=1;}}); }
 
     canvas.addEventListener('pointerdown', e => {
         const r = canvas.getBoundingClientRect(), mx = (e.clientX-r.left)*(canvas.width/r.width), my = (e.clientY-r.top)*(canvas.height/r.height);
         hand.forEach(p => {
             const pw = p.shape[0].length*CELL_SIZE*p.scale, ph = p.shape.length*CELL_SIZE*p.scale;
-            if (mx > p.x-pw/2-20 && mx < p.x+pw/2+20 && my > p.y-ph/2-20 && my < p.y+ph/2+20) { draggingPiece = p; canvas.setPointerCapture(e.pointerId); playSfx(400, 'sine', 0.1); }
+            if (mx > p.x-pw/2-30 && mx < p.x+pw/2+30 && my > p.y-ph/2-30 && my < p.y+ph/2+30) { draggingPiece = p; canvas.setPointerCapture(e.pointerId); playSfx(400, 'sine', 0.1); }
         });
     });
 
